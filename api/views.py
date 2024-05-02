@@ -5,6 +5,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from .serializers import InferenceRequestSerializer
 from .core.inference import predict
+from .core.explaination import get_gradcam_url
 
 # Create your views here.
 class InferenceCreateAPIView(CreateAPIView):
@@ -20,5 +21,6 @@ class InferenceCreateAPIView(CreateAPIView):
         results = predict(file)
         return Response(data=results, status=status.HTTP_200_OK)
     
-
-
+@api_view(["GET"])   
+def get_explaination_url(request, id):
+    return Response(data={ 'url': get_gradcam_url(id) }, status=status.HTTP_200_OK)

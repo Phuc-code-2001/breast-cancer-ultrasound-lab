@@ -1,20 +1,19 @@
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-import tensorflow as tf
 import keras
 import cv2
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import numpy as np
-import secrets
+
+from .explaination import GradCAM, create_gradcam
 
 IMG_SIZE = 224
 
 model : keras.Model = keras.models.load_model(r'.\api\cnn-models\busi_Proposed_ph2_model.h5')
 model.trainable = False
 model.summary()
+
+gradcam = GradCAM(model)
 
 classes = ['benign', 'normal', 'malignant']
 
@@ -27,6 +26,16 @@ def predict(file):
     
     x = np.expand_dims(img, axis=0)
     probs = model.predict(x)[0]
+    label_id = np.argmax(probs)
     
-    return { classes[i]: prob for i, prob in enumerate(probs) }
+    gradcam_id = create_gradcam(gradcam, x, "Unknown", probs)
+    
+    results = {
+        'label': classes[label_id],
+        'confidence': np.max(probs),
+        'probs': { classes[i]: prob for i, prob in enumerate(probs) },
+        'gradcam_id': gradcam_id
+    }
+    
+    return results
 
